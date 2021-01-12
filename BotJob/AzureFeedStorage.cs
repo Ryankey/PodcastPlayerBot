@@ -30,8 +30,11 @@ namespace BotJob
             await _client.CreateDocumentCollectionIfNotExistsAsync(UriFactory.CreateDatabaseUri(databaseName), new DocumentCollection { Id = collectionName });
         }
 
-        public async Task AddFeedAsync(string name, PodcastFeed feed)
+        public async Task<bool> TryAddFeedAsync(string name, PodcastFeed feed)
         {
+            if (_inMemory.ContainsKey(name)) {
+                return false;
+            }
             try
             {
                 var feedDocument = new FeedDocument
@@ -50,6 +53,8 @@ namespace BotJob
                 Console.WriteLine(e.Message);
                 throw e;
             }
+
+            return true;
         }
 
         public Task<PodcastFeed> GetFeedAsync(string name)

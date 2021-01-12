@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using PodcastPlayerDiscordBot.Rss;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,9 +18,7 @@ namespace PodcastPlayerDiscordBot.Commands
         private readonly IFeedStorage _feedStorage;
         private readonly RssController _controller;
 
-        private string LastFeed { get; set; }
-        private int LastEpisodeNumber { get; set; }
-        private Episode CurrentEpisode { get; set; }
+
 
         // Dependencies can be injected via the constructor
         public RssCommands(DiscordSocketClient client, ISpeaker speaker, IFeedStorage feedStorage, RssController controller)
@@ -35,20 +34,20 @@ namespace PodcastPlayerDiscordBot.Commands
         public async Task AddFeed([Summary("The name to give the feed")]string name,
             [Summary("The url of the rss feed")] string url)
         {
-            var feed = new PodcastFeed(url);
-
-            if (!await _feedStorage.TryAddFeedAsync(name, feed)) {
+            if (await _controller.TryAddFeedAsync(name, url))
+            {
+                await ReplyAsync("Feed added");
+            }
+            else {
                 await ReplyAsync($"Feed already added under name {name}");
             }
-
-            await ReplyAsync("Feed added");
         }
 
         // ~info -> information about the feed
         [RequireBotPermission(GuildPermission.ManageMessages), Command("info"), Summary("displays information about an rss feed")]
         public async Task Info([Summary("The name of the feed")]string name)
         {
-            var feed = await _feedStorage.GetFeedAsync(name);
+            var feed = await _controller.GetRssFeed(name);
             if (feed != null)
             {
                 await ReplyAsync($"{feed}");
@@ -63,7 +62,7 @@ namespace PodcastPlayerDiscordBot.Commands
         [RequireBotPermission(GuildPermission.ManageMessages), Command("list"), Summary("lists rss feeds")]
         public async Task ListFeeds()
         {
-            var feeds = await _feedStorage.GetFeedsAsync();
+            Dictionary<string, PodcastFeed> feeds = await _controller.GetAllFeeds();
             if (feeds.Count == 0)
             {
                 await ReplyAsync("No feeds");

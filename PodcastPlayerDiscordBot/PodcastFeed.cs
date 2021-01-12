@@ -72,7 +72,8 @@ namespace PodcastPlayerDiscordBot
                 }
 
                 // Get rid of the tags
-                var summary = Regex.Replace(item.Summary.Text, @"<.+?>", string.Empty);
+                var summary = item.Summary?.Text ?? "";
+                summary = Regex.Replace(summary, @"<.+?>", string.Empty);
 
                 // Then decode the HTML entities
                 summary = WebUtility.HtmlDecode(summary);

@@ -21,7 +21,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~play url <url>
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("play url"), Summary("plays a podcast in the voice channel you are currently in")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("play url"), Summary("plays a podcast in the voice channel you are currently in")]
         public async Task PlayUrl([Summary("The url to play")] string url)
         {
             var uri = new Uri(url);
@@ -29,14 +29,14 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~stop
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("stop"), Alias("stap"), Summary("halts the playing of the podcast")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("stop"), Alias("stap"), Summary("halts the playing of the podcast")]
         public async Task Stop()
         {
             await _speaker.StopAsync();
         }
 
         // ~leave
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("leave"), Alias("go away"), Summary("the bot will leave the voice channel it is currently in")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("leave"), Alias("go away"), Summary("the bot will leave the voice channel it is currently in")]
         public async Task Leave()
         {
             var user = Context.Message.Author as IGuildUser;
@@ -56,7 +56,7 @@ namespace PodcastPlayerDiscordBot.Commands
             var channel = user?.VoiceChannel;
             if (channel == null)
             {
-                await ReplyAsync("Can't find voice channel.");
+                await ReplyAsync("You think I'm a fool? Join a voice channel before playing podcasts.");
                 return false;
             }
 

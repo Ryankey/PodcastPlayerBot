@@ -7,6 +7,6 @@ namespace PodcastPlayerDiscordBot
     {
         Task<Dictionary<string, PodcastFeed>> GetFeedsAsync();
         Task<PodcastFeed> GetFeedAsync(string name);
-        Task AddFeedAsync(string name, PodcastFeed feed);
+        Task<bool> TryAddFeedAsync(string name, PodcastFeed feed);
     }
 }

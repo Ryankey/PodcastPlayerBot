@@ -56,7 +56,7 @@ namespace PodcastPlayerDiscordBot
                         WaveFormatConversionStream.CreatePcmStream(
                             new Mp3FileReader(ms))))
                 {
-                    var audioStream = _client.CreatePCMStream(AudioApplication.Mixed, 1920);
+                    var audioStream = _client.CreatePCMStream(AudioApplication.Mixed, 98304);
                     await blockAlignedStream.CopyToAsync(audioStream);
                 }
             }

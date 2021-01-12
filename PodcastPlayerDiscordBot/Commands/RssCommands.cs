@@ -1,7 +1,7 @@
 ﻿using Discord;
-using Discord.Audio;
 using Discord.Commands;
 using Discord.WebSocket;
+using PodcastPlayerDiscordBot.Rss;
 using System;
 using System.Linq;
 using System.Text;
@@ -15,33 +15,37 @@ namespace PodcastPlayerDiscordBot.Commands
         private readonly DiscordSocketClient _client;
         private readonly ISpeaker _speaker;
         private readonly IFeedStorage _feedStorage;
+        private readonly RssController _controller;
 
         private string LastFeed { get; set; }
         private int LastEpisodeNumber { get; set; }
         private Episode CurrentEpisode { get; set; }
 
         // Dependencies can be injected via the constructor
-        public RssCommands(DiscordSocketClient client, ISpeaker speaker, IFeedStorage feedStorage)
+        public RssCommands(DiscordSocketClient client, ISpeaker speaker, IFeedStorage feedStorage, RssController controller)
         {
             _client = client;
             _speaker = speaker;
             _feedStorage = feedStorage;
+            _controller = controller;
         }
 
         // ~add url 
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("add"), Summary("adds a rss feed url to the bot")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("add"), Summary("adds a rss feed url to the bot")]
         public async Task AddFeed([Summary("The name to give the feed")]string name,
             [Summary("The url of the rss feed")] string url)
         {
             var feed = new PodcastFeed(url);
 
-            await _feedStorage.AddFeedAsync(name, feed);
+            if (!await _feedStorage.TryAddFeedAsync(name, feed)) {
+                await ReplyAsync($"Feed already added under name {name}");
+            }
 
             await ReplyAsync("Feed added");
         }
 
         // ~info -> information about the feed
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("info"), Summary("displays information about an rss feed")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("info"), Summary("displays information about an rss feed")]
         public async Task Info([Summary("The name of the feed")]string name)
         {
             var feed = await _feedStorage.GetFeedAsync(name);
@@ -56,7 +60,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~list -> lists current podcast feeds
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("list"), Summary("lists rss feeds")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("list"), Summary("lists rss feeds")]
         public async Task ListFeeds()
         {
             var feeds = await _feedStorage.GetFeedsAsync();
@@ -77,7 +81,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~episodes name -> list of episodes in the feed
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("episodes"), Summary("lists episodes in an rss feed")]
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("episodes"), Summary("lists episodes in an rss feed")]
         public async Task ListEpisodes([Summary("The name of the feed")]string name)
         {
             var feed = await _feedStorage.GetFeedAsync(name);
@@ -112,7 +116,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~what -> episode description
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("what"),
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("what"),
             Alias("what is this", "current", "playing"),
             Summary("provides information on the currenly playing episode")]
         public async Task What()
@@ -127,7 +131,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~play last -> plays the last episode
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("play last"),
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("play last"),
             Alias("play latest", "play current"),
             Summary("plays the last episode of the given rss feed")]
         public async Task PlayLast([Summary("The name of the feed")]string name)
@@ -146,7 +150,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~play next -> plays the next episode
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("play next"),
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("play next"),
             Summary("plays the next episode of the given rss feed")]
         public async Task PlayNext([Summary("The name of the feed")]string name)
         {
@@ -154,7 +158,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~play feed episode -> plays specified episode from the specified podcast feed
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("play"),
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("play"),
             Alias("play episode", "episode", "e", "p"),
             Summary("play the given episode of the given rss feed")]
         public async Task PlayEpisode([Summary("The name of the feed")]string name,
@@ -164,7 +168,7 @@ namespace PodcastPlayerDiscordBot.Commands
         }
 
         // ~restart -> restarts the current podcast
-        [RequireUserPermission(GuildPermission.ManageMessages), Command("restart"),
+        [RequireBotPermission(GuildPermission.ManageMessages), Command("restart"),
             Alias("repeat", "re"),
             Summary("restarts the currently playing episode")]
         public async Task Restart()

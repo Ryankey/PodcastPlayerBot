@@ -38,13 +38,17 @@ namespace PodcastPlayerDiscordBot
             return dict;
         }
 
-        public async Task AddFeedAsync(string name, PodcastFeed feed)
+        public async Task<bool> TryAddFeedAsync(string name, PodcastFeed feed)
         {
+            if (_inMemory.ContainsKey(name)) {
+                return false;
+            }
             _inMemory.Add(name, feed);
             using (var writer = File.AppendText(Path))
             {
                 await writer.WriteLineAsync($"{name}{Seperator}{feed.Url.ToString()}");
             }
+            return true;
         }
 
         public Task<PodcastFeed> GetFeedAsync(string name)
